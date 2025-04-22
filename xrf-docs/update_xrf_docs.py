@@ -4,7 +4,6 @@ import shutil
 import elk_repo
 
 def main():
-
     # Get latest files from cloned repos
     elk_repo.pull("Carriers")
     elk_repo.pull("DAQ8")
@@ -82,6 +81,14 @@ def update_files(repo_name):
         # print(f'Copied: {file_match}')
 
     rm_empty_dir(tmp_dir)
+
+    # Setup logging
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(filename='xrf-docs.log', encoding='utf-8', level=logging.DEBUG)
+
+    for inc_files in glob.glob(f'{tmp_dir}/**/*', recursive=True):
+    #    print("Included file: %s", inc_files )
+        logger.info(f'Included file: %s', inc_files)
 
     return tmp_dir
 
