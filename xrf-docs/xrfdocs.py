@@ -1,7 +1,10 @@
-import os, datetime, glob, logging
+import os
+import datetime
+import glob
+import logging
 import shutil
 import webbrowser
-import elk_repo
+import elkrepo
 
 XRF_FILES_DIR = ("C:/Users/027419/Avnet/Engineering & Technology 5G-DSP - "
                  "Documents/XRF/Customer Support/Files")
@@ -25,9 +28,9 @@ logging.basicConfig(filename=LOG_FILE, encoding='utf-8', level=logging.DEBUG)
 def main():
     """Executive function that sequences the update
     """
-    elk_repo.pull("Carriers")
-    elk_repo.pull("DAQ8")
-    elk_repo.pull("RTX16")
+    elkrepo.pull("Carriers")
+    elkrepo.pull("DAQ8")
+    elkrepo.pull("RTX16")
 
     # Update files and zip 'Request for Info'
     update_overview()
@@ -145,7 +148,7 @@ def update_tech_pkg(repo_name):
     # So we compair the remote hash to the 8-digit suffix in the local filename
     # and open the file URL in a browser if they do not match.
     tutorial_remote = 'git@gitlab.elkengineering.net:common/tutorial.git'
-    remote_hash = elk_repo.get_hash(tutorial_remote)
+    remote_hash = elkrepo.get_hash(tutorial_remote)
     pattern = os.path.join(XRF_COMMON_DIR,"*Getting*Started*")
     
     for file_match in glob.glob(pattern):
