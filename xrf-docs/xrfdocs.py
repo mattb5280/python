@@ -8,9 +8,8 @@ import elkrepo
 
 XRF_FILES_DIR = ("C:/Users/027419/Avnet/Engineering & Technology 5G-DSP - "
                  "Documents/XRF/Customer Support/Files")
-XRF8_OVW_DIR = os.path.join(XRF_FILES_DIR,'Tria_XRF8_Overview')
-XRF16_OVW_DIR = os.path.join(XRF_FILES_DIR,'Tria_XRF16_Overview')
 XRF_COMMON_DIR = os.path.join(XRF_FILES_DIR,'common')
+XRF_PROD_BRIEF_DIR = os.path.join(XRF_FILES_DIR, 'product_briefs')
 LOG_FILE = os.path.join(XRF_FILES_DIR,'xrfdocs.log')
 
 xrf_dict = {"DAQ8": "XRF8",
@@ -23,6 +22,7 @@ if os.path.isfile(LOG_FILE):
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=LOG_FILE, encoding='utf-8', level=logging.DEBUG)
+logger.info(msg=f'Build Date = {datetime.datetime.now()}')
 
 
 def main():
@@ -32,18 +32,21 @@ def main():
     elkrepo.pull("DAQ8")
     elkrepo.pull("RTX16")
 
-    # Update files and zip 'Request for Info'
-    update_overview()
-    make_zip(src_folder=XRF8_OVW_DIR, dest_folder=XRF_FILES_DIR)
-    make_zip(src_folder=XRF16_OVW_DIR, dest_folder=XRF_FILES_DIR)
+    # Update 'Overview' files and zip
+    fp = update_overview(eng_name='DAQ8')
+    make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)
+
+    fp = update_overview(eng_name='RTX16')
+    make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)   
         
-    # Stage new tech package, zip, and move to XRF directory
+    # Update 'Tech Package' files and zip
     fp = update_tech_pkg(repo_name='DAQ8')
     make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)
+    cleanup(tmp_dir=fp)
 
     fp = update_tech_pkg(repo_name='RTX16')
     make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)
-
+    cleanup(tmp_dir=fp)
 
 def update_pb(eng_name, dest_folder):
     """Copy latest Tria product briefs into dest folder
@@ -53,9 +56,7 @@ def update_pb(eng_name, dest_folder):
     dest_folder -- path to destination folder
     """
     pfx = xrf_dict[eng_name]
-     
-    src_dir = os.path.join(XRF_FILES_DIR, 'product_briefs')
-    src_pattern = os.path.join(src_dir, f'*{pfx}*.pdf')
+    src_pattern = os.path.join(XRF_FILES_DIR, f'*{pfx}*.pdf')
 
     # Create folder if missing
     if not os.path.exists(dest_folder):
@@ -67,20 +68,26 @@ def update_pb(eng_name, dest_folder):
         # print(f'UPDATE: {dest_folder}')
 
 
-def update_overview():
+def update_overview(eng_name):
     """Update archive of Overview files
+
+    Keyword arguments:
+    eng_name -- Elk product name
     """
-    update_pb('DAQ8', XRF8_OVW_DIR)
-    update_pb('RTX16', XRF16_OVW_DIR)
+    today = datetime.date.today()
+
+    dest_folder = f'Tria_{xrf_dict[eng_name]}_Overview_{today.strftime("%Y%m%d")}'
+    dest_path = os.path.join(XRF_FILES_DIR, dest_folder)
+
+    update_pb(eng_name=eng_name,dest_folder=dest_path)
 
     # Copy latest Tria collateral common to all XRF products    
     pattern = ['*Quick Start*','*Getting Started*']
 
-    shutil.copytree(XRF_COMMON_DIR, XRF8_OVW_DIR, dirs_exist_ok=True, 
-                    ignore=shutil.ignore_patterns(*pattern))
-    shutil.copytree(XRF_COMMON_DIR, XRF16_OVW_DIR, dirs_exist_ok=True, 
+    shutil.copytree(XRF_COMMON_DIR, dest_path, dirs_exist_ok=True, 
                     ignore=shutil.ignore_patterns(*pattern))
 
+    return dest_path
 
 def update_tech_pkg(repo_name):
     """Function to refresh XRF collateral from cloned repo.
@@ -209,7 +216,10 @@ def make_zip(src_folder,dest_folder):
     logger.info(msg)
 
 def cleanup(tmp_dir):
-    print('Please cleanup after yourself')
+    """Function to clean up temporary build artifacts
+    """
+    if os.path.exists(tmp_dir):
+        shutil.rmtree(tmp_dir)
 
     
 if __name__=='__main__':

@@ -12,11 +12,11 @@ def main():
 
 def pull(elk_repo):
     """ 
-        Git pull from Elk GitLab repository.
-        Parameters:
-        -----------
-        elk_repo : str
-                   Name of Elk module (ex: DAQ8 or RTX16) 
+    Git pull from Elk GitLab repository.
+    Parameters:
+    -----------
+    elk_repo : str
+               Name of Elk module (ex: DAQ8 or RTX16) 
     """
     local_dir = os.path.join("C:\\dev\\elk\\",elk_repo,"Distribution")
 
@@ -39,7 +39,7 @@ def copy_file(elk_file_url, copy_to_path):
     # Pull file from Elk repo
     try:
         ## Using curl:
-        #  Works for a .zip download, but trying PDF download the return 
+        #  Works for a .zip download, but for PDF download the return 
         #  file is HTML saying I'm being redirected to Sign On.
         cmd = f'curl --header "PRIVATE-TOKEN: E2vedJptnxfCshnCzaqe" --url "{elk_file_url}" --output "{copy_to_path}"'
         subprocess.run(cmd, check=True)
