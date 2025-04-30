@@ -56,7 +56,7 @@ def update_pb(eng_name, dest_folder):
     dest_folder -- path to destination folder
     """
     pfx = xrf_dict[eng_name]
-    src_pattern = os.path.join(XRF_FILES_DIR, f'*{pfx}*.pdf')
+    src_pattern = os.path.join(XRF_PROD_BRIEF_DIR, f'*{pfx}*.pdf')
 
     # Create folder if missing
     if not os.path.exists(dest_folder):
