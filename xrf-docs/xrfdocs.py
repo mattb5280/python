@@ -32,10 +32,10 @@ def main():
     elkrepo.pull("RTX16")
 
     # Update 'Overview' files and zip
-    fp = update_overview(eng_name='DAQ8')
+    fp = update_deepdive(eng_name='DAQ8')
     make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)
 
-    fp = update_overview(eng_name='RTX16')
+    fp = update_deepdive(eng_name='RTX16')
     make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)   
         
     # Update 'Tech Package' files and zip
@@ -65,7 +65,7 @@ def update_pb(eng_name, dest_folder):
     for file_match in glob.glob(src_pattern):
         shutil.copy(file_match, dest_folder)
 
-def update_overview(eng_name):
+def update_deepdive(eng_name):
     """Update archive of Overview files
 
     Keyword arguments:
@@ -73,7 +73,7 @@ def update_overview(eng_name):
     """
     today = datetime.date.today()
 
-    dest_folder = f'Tria_{xrf_dict[eng_name]}_Overview_{today.strftime("%Y%m%d")}'
+    dest_folder = f'Tria_{xrf_dict[eng_name]}_DeepDive_{today.strftime("%Y%m%d")}'
     dest_path = os.path.join(XRF_FILES_DIR, dest_folder)
 
     logger.info(f'_____________________________________________')
@@ -118,7 +118,7 @@ def update_tech_pkg(repo_name):
 
     # Create top-level archive name
     today = datetime.date.today()
-    folder_name = f'Tria_{pfx}_Tech_Package_{today.strftime("%Y%m%d")}'
+    folder_name = f'Tria_{pfx}_TechPackage_{today.strftime("%Y%m%d")}'
 
     # Create staging folder
     tmp_dir = os.path.join('C:/tmp/',folder_name)
