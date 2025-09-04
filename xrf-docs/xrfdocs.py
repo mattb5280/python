@@ -7,7 +7,7 @@ import webbrowser
 import elkrepo
 
 XRF_FILES_DIR = ("C:/Users/027419/Avnet/Engineering & Technology 5G-DSP - "
-                 "Documents/XRF/Customer Support/Files")
+                 "Documents/XRF/Customer Pre-sales Support/Files")
 XRF_COMMON_DIR = os.path.join(XRF_FILES_DIR,'common')
 XRF_PROD_BRIEF_DIR = os.path.join(XRF_FILES_DIR, 'product_briefs')
 LOG_FILE = os.path.join(XRF_FILES_DIR,'xrfdocs.log')
@@ -31,14 +31,14 @@ def main():
     elkrepo.pull("DAQ8")
     elkrepo.pull("RTX16")
 
-    # Update 'Overview' files and zip
+    print('## Creating DeepDive Archives')
     fp = update_deepdive(eng_name='DAQ8')
     make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)
 
     fp = update_deepdive(eng_name='RTX16')
     make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)   
-        
-    # Update 'Tech Package' files and zip
+
+    print('## Creating TechPackage Archives')
     fp = update_tech_pkg(repo_name='DAQ8')
     make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)
     cleanup(tmp_dir=fp)
@@ -46,6 +46,10 @@ def main():
     fp = update_tech_pkg(repo_name='RTX16')
     make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)
     cleanup(tmp_dir=fp)
+
+    print('## FINISHED!')
+    print(f'## OUTPUT FOLDER -> {XRF_FILES_DIR}')
+    print(f'## LOG FILE      -> {LOG_FILE}')
 
 def update_pb(eng_name, dest_folder):
     """Copy latest Tria product briefs into dest folder
@@ -164,24 +168,28 @@ def update_tech_pkg(repo_name):
     # and open the file URL in a browser if they do not match.
     tutorial_remote = 'git@gitlab.elkengineering.net:common/tutorial.git'
     remote_hash = elkrepo.get_hash(tutorial_remote)
+
+    # Find Getting Started file(s)
     pattern = os.path.join(XRF_COMMON_DIR,"*Getting*Started*")
+    file_match = glob.glob(pattern)
+    fn = file_match[-1].removeprefix(XRF_COMMON_DIR)
+
+    # Warn on multiple matches
+    if len(file_match) > 1:
+        msg = f'## WARNING: multiple copies of GETTING STARTED GUIDE found in {XRF_COMMON_DIR}'
+        print(msg)
+
+    # Ensure one filename includes matching git hash
+    hash_match = any(remote_hash[0:8] in x for x in file_match)
     
-    for file_match in glob.glob(pattern):
-        fn = os.path.basename(file_match.rstrip(".pdf"))
-    
-    if remote_hash[0:8] in fn:
-        msg = f'NOTICE: {fn} is current with hash {remote_hash}'
-        logger.info(msg)
-    else:
-        msg = f'WARNING: {fn} is NOT current with hash {remote_hash}'
+    if not hash_match:
+        msg = f'## WARNING: {fn} is NOT current with hash {remote_hash}'
         logger.warning(msg)
         print(msg)
 
         elk_gsg_url = ('https://gitlab.elkengineering.net/common/tutorial/-'
                        '/raw/master/Getting_Started.pdf?inline=false')
         webbrowser.open(elk_gsg_url, autoraise=True,)
-        
-    print(msg)      
 
     return tmp_dir
 
@@ -220,7 +228,7 @@ def make_zip(src_folder,dest_folder):
     shutil.move(f'{output_file}.zip', f'{dest_path}')
 
     msg = f'ZIPPED: {dest_path}'
-    print(msg)
+    # print(msg)
     logger.info(msg)
 
 def cleanup(tmp_dir):
