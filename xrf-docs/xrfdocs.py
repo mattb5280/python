@@ -6,11 +6,13 @@ import shutil
 import webbrowser
 import elkrepo
 
+# Setup constants
 XRF_FILES_DIR = ("C:/Users/027419/Avnet/Engineering & Technology 5G-DSP - "
                  "Documents/XRF/Customer Pre-sales Support/Files")
 XRF_COMMON_DIR = os.path.join(XRF_FILES_DIR,'common')
 XRF_PROD_BRIEF_DIR = os.path.join(XRF_FILES_DIR, 'product_briefs')
 LOG_FILE = os.path.join(XRF_FILES_DIR,'xrfdocs.log')
+GITLAB_TOKEN='E2vedJptnxfCshnCzaqe'
 
 xrf_dict = {"DAQ8": "XRF8",
             "RTX16": "XRF16"
@@ -98,11 +100,12 @@ def update_deepdive(eng_name):
     return dest_path
 
 def update_tech_pkg(repo_name):
-    """Function to refresh XRF collateral from cloned repo.
+    """
+        Function to refresh XRF collateral from cloned repo.
 
-    Parameters
-    ----------
-    repo_name : string
+        Parameters
+        ----------
+        repo_name : string
 
     """
     # Create destination folder names
@@ -120,9 +123,11 @@ def update_tech_pkg(repo_name):
     else:
         som_folder = 'unknown_repo'
 
+
     # Create top-level archive name
     today = datetime.date.today()
     folder_name = f'Tria_{pfx}_TechPackage_{today.strftime("%Y%m%d")}'
+
 
     # Create staging folder
     tmp_dir = os.path.join('C:/tmp/',folder_name)
@@ -131,25 +136,39 @@ def update_tech_pkg(repo_name):
     else:
         os.makedirs(tmp_dir)
 
+
     # Paths for SOM & CC staging folders
     som_dir = os.path.join(tmp_dir,som_folder)
     cc_dir = os.path.join(tmp_dir,cc_folder)
+
 
     # Copy SOM files from cloned Elk repo. Exclude binaries and restricted files.
     src_dir_som = f'C:/dev/elk/{repo_name}/Distribution/'
     pattern = ['*_SCH.PDF','*.txt','*.zip','.git','images','*.step','*.x_t','*.DWG','*.md']
     shutil.copytree(src_dir_som, som_dir, ignore=shutil.ignore_patterns(*pattern))
 
+
     # Copy CC files from cloned Elk repo. Exclude binaries and restricted files.
     src_dir_cc = f'C:/dev/elk/Carriers/distribution/{cc_repo_name}'
     pattern = ['PCB','RF Shield','.git*','*.md','*.step','*.x_t','*.DWG','*.DXF','*.scc','SEAF8*']
     shutil.copytree(src_dir_cc, cc_dir, ignore=shutil.ignore_patterns(*pattern))
-          
+
+
+    # Copy latest GSG from Elk repo
+    src_path_gsg='Getting_Started.pdf'
+    dest_path_gsg = os.path.join(XRF_COMMON_DIR,'Tria XRF Getting Started Guide.pdf')
+    elkrepo.download_file('https://gitlab.elkengineering.net/',
+                          GITLAB_TOKEN, 'Tutorial', 'master', 
+                          src_path_gsg, dest_path_gsg)
+
+
     # Copy latest Tria collateral common to all XRF products
     shutil.copytree(XRF_COMMON_DIR, tmp_dir, dirs_exist_ok=True)
 
+
     # Copy latest Tria product briefs for this XRF version
     update_pb(repo_name, tmp_dir)
+
 
     # Descend all dirs and remove empty folders
     rm_empty_dir(tmp_dir)
@@ -158,38 +177,10 @@ def update_tech_pkg(repo_name):
     logger.info(f'TOP_FOLDER: {folder_name}')
     logger.info(f'_____________________________________________')
 
+
     # Send manifest of all included file names to the log
     for inc_files in glob.glob(f'{tmp_dir}/**/*', recursive=True):
         logger.info(f'ADDED: %s', inc_files.removeprefix(tmp_dir))
-
-    # Check for updates of GSG file in Elk tutorial repo, which is too large to 
-    # clone everytime. Unable to successfully download single PDF from python.
-    # So we compair the remote hash to the 8-digit suffix in the local filename
-    # and open the file URL in a browser if they do not match.
-    tutorial_remote = 'git@gitlab.elkengineering.net:common/tutorial.git'
-    remote_hash = elkrepo.get_hash(tutorial_remote)
-
-    # Find Getting Started file(s)
-    pattern = os.path.join(XRF_COMMON_DIR,"*Getting*Started*")
-    file_match = glob.glob(pattern)
-    fn = file_match[-1].removeprefix(XRF_COMMON_DIR)
-
-    # Warn on multiple matches
-    if len(file_match) > 1:
-        msg = f'## WARNING: multiple copies of GETTING STARTED GUIDE found in {XRF_COMMON_DIR}'
-        print(msg)
-
-    # Ensure one filename includes matching git hash
-    hash_match = any(remote_hash[0:8] in x for x in file_match)
-    
-    if not hash_match:
-        msg = f'## WARNING: {fn} is NOT current with hash {remote_hash}'
-        logger.warning(msg)
-        print(msg)
-
-        elk_gsg_url = ('https://gitlab.elkengineering.net/common/tutorial/-'
-                       '/raw/master/Getting_Started.pdf?inline=false')
-        webbrowser.open(elk_gsg_url, autoraise=True,)
 
     return tmp_dir
 
