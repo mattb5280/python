@@ -14,9 +14,9 @@ def main():
 def pull(elk_repo):
     """ 
     Git pull from Elk GitLab repository.
-    kwargs:
-    -----------
-    elk_repo <str>:Name of Elk module (ex: DAQ8 or RTX16) 
+    
+    Args:
+        elk_repo: str, Name of Elk module (ex: DAQ8 or RTX16) 
     """
     local_dir = os.path.join("C:\\dev\\elk\\",elk_repo,"Distribution")
 
@@ -33,14 +33,14 @@ def pull(elk_repo):
 
 def download_file(host, token, project_name, branch_name, file_path, output):
     """
-        Download single-file from GitLab repo using python-gitlab
-        kwargs:
-        -----------
-        host            <string>:gitlab URL domain only, without project/path
-        project_name    <string>:GitLab project name
-        branch_name     <string>:GitLab branch name
-        file_path       <string>:GitLab path to desired file
-        output          <string>:Local storage file path
+    Download single-file from GitLab repo using python-gitlab
+
+    Args:
+        host: str, gitlab URL domain only, without project/path
+        project_name: str, GitLab project name
+        branch_name: str, GitLab branch name
+        file_path: str, GitLab path to desired file
+        output: str, Local storage file path
     """
     try:
         gl = gitlab.Gitlab(host, private_token=token)
@@ -58,10 +58,10 @@ def download_file(host, token, project_name, branch_name, file_path, output):
 
 def get_hash(url):
     """
-        Function to return git hash from the HEAD of a remote
-        kwargs:
-        -------
-        url <string>:URL of GitLab repo
+    Request latest git hash from the HEAD of a remote
+    
+    Args:
+        url: str, URL of GitLab repo
     """
     
     git_cmd = f'git ls-remote {url}'
