@@ -29,12 +29,19 @@ logger.info(msg=f'Build Date = {datetime.datetime.now()}')
 def main():
     """
     Facilitates the update of all XRF collateral packages
-    """
-    elkrepo.pull("Carriers")
-    elkrepo.pull("DAQ8")
-    elkrepo.pull("RTX16")
+    """  
+    hash = elkrepo.pull("Carriers")
+    logger.info(msg=f'Elk Repo "Carrier" commit SHA: {hash}')
 
-    update_gsg()
+    hash = elkrepo.pull("DAQ8")
+    logger.info(msg=f'Elk Repo "DAQ8" commit SHA: {hash}')
+
+    hash = elkrepo.pull("RTX16")
+    logger.info(msg=f'Elk Repo "RTX16" commit SHA: {hash}')
+
+    hash = update_gsg()
+    logger.info(msg=f'Elk Repo "Tutorial" commit SHA: {hash}')
+
 
     print('## Creating DeepDive Archives')
     fp = update_deepdive(eng_name='DAQ8')
@@ -53,8 +60,8 @@ def main():
     cleanup(tmp_dir=fp)
 
     print('## FINISHED!')
-    print(f'## OUTPUT FOLDER -> {XRF_FILES_DIR}')
-    print(f'## LOG FILE      -> {LOG_FILE}')
+    print(f'## OUTPUT {XRF_FILES_DIR}')
+    print(f'## LOG    {LOG_FILE}')
 
 def update_pb(eng_name, dest_folder):
     """
@@ -64,14 +71,14 @@ def update_pb(eng_name, dest_folder):
         eng_name: str, Elk product name
         dest_folder: str, path to destination folder
     """
-    pfx = xrf_dict[eng_name]
-    src_pattern = os.path.join(XRF_PROD_BRIEF_DIR, f'*{pfx}*.pdf')
-
-    # Create folder if missing
+     # Create folder if missing
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)
 
-    # Copy all that match pattern
+    # Copy carrier and module product briefs
+    pfx = xrf_dict[eng_name]
+    src_pattern = os.path.join(XRF_PROD_BRIEF_DIR, f'*{pfx}*.pdf')
+
     for file_match in glob.glob(src_pattern):
         shutil.copy(file_match, dest_folder)
 
@@ -79,11 +86,15 @@ def update_gsg():
     """
     Copy latest Getting Started Guide from Elk repo into common folder
     """
-    src_path_gsg='Getting_Started.pdf'
-    dest_path_gsg = os.path.join(XRF_COMMON_DIR,'Tria XRF Getting Started Guide.pdf')
-    elkrepo.download_file('https://gitlab.elkengineering.net/',
-                          GITLAB_TOKEN, 'Tutorial', 'master', 
-                          src_path_gsg, dest_path_gsg)
+    fn = 'Tria XRF Getting Started Guide.pdf'
+    dest_filepath = os.path.join(XRF_COMMON_DIR,fn)
+
+    hash = elkrepo.download_file(project_name='Tutorial', branch_name='master',
+                          file_path='Getting_Started.pdf', output=dest_filepath)
+    
+    print(f'## Downloaded "{fn}" from remote.')
+    
+    return hash
 
 def update_deepdive(eng_name):
     """
@@ -92,6 +103,7 @@ def update_deepdive(eng_name):
     Args:
         eng_name: str, Elk product name
     """
+
     today = datetime.date.today()
 
     dest_folder = f'Tria_{xrf_dict[eng_name]}_DeepDive_{today.strftime("%Y%m%d")}'
