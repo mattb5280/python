@@ -4,7 +4,7 @@ import subprocess
 import gitlab
 
 HOST_URL = 'https://gitlab.elkengineering.net/'
-TOKEN_FILE = 'C:/Users/027419/OneDrive - Avnet/Documents/Avnet_Git/GitLab/py-read-token-elkrepo.txt'
+TOKEN_FILE = 'C:/Users/027419/OneDrive - Avnet/Documents/Avnet_Git/GitLab/elkrepo-readonly-token.txt'
 
 def main():
     # Parse command line arguments
