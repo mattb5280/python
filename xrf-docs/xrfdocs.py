@@ -12,8 +12,7 @@ XRF_COMMON_DIR = os.path.join(XRF_FILES_DIR,'common')
 XRF_PROD_BRIEF_DIR = os.path.join(XRF_FILES_DIR, 'product_briefs')
 LOG_FILE = os.path.join(XRF_FILES_DIR,'xrfdocs.log')
 
-GITLAB_TOKEN='E2vedJptnxfCshnCzaqe'
-
+# Map eng name to prod name
 xrf_dict = {"DAQ8": "XRF8",
             "RTX16": "XRF16"
             }
@@ -30,6 +29,7 @@ def main():
     """
     Facilitates the update of all XRF collateral packages
     """  
+    # Pull content from remote GitLab repos
     hash = elkrepo.pull("Carriers")
     logger.info(msg=f'Elk Repo "Carrier" commit SHA: {hash}')
 
@@ -43,6 +43,7 @@ def main():
     logger.info(msg=f'Elk Repo "Tutorial" commit SHA: {hash}')
 
 
+    # Create collateral archives
     print('## Creating DeepDive Archives')
     fp = update_deepdive(eng_name='DAQ8')
     make_zip(src_folder=fp, dest_folder=XRF_FILES_DIR)
@@ -62,6 +63,7 @@ def main():
     print('## FINISHED!')
     print(f'## OUTPUT {XRF_FILES_DIR}')
     print(f'## LOG    {LOG_FILE}')
+
 
 def update_pb(eng_name, dest_folder):
     """
@@ -118,7 +120,7 @@ def update_deepdive(eng_name):
                     ignore=shutil.ignore_patterns(*pattern))
 
 
-    # Send manifest of all included file names to the log   
+    # Log manifest of all included files   
     logger.info(f'_____________________________________________')
     logger.info(f'TOP_FOLDER: {dest_folder}')
     logger.info(f'_____________________________________________')
@@ -135,15 +137,15 @@ def update_tech_pkg(repo_name):
     Args:
         repo_name: str, Name of Elk repo
     """
+    pfx = xrf_dict[repo_name]
+
     # Create destination folder names
     if repo_name == 'DAQ8':
-        pfx = 'XRF8'
         cc_repo_name = repo_name
         som_folder = f'{pfx} SOM (AES-XRF8-ZU47-G)'
         cc_folder  = f'{pfx} Carrier (AES-XRF8-CC-G)'
 
     elif repo_name == 'RTX16':
-        pfx = 'XRF16'
         cc_repo_name = 'DAQ16'
         som_folder = f'{pfx} SOM (AES-XRF16-ZU49-G)'
         cc_folder  = f'{pfx} Carrier (AES-XRF16-CC-G-D)'
@@ -163,19 +165,15 @@ def update_tech_pkg(repo_name):
     else:
         os.makedirs(tmp_dir)
 
-
-    # Paths for SOM & CC staging folders
     som_dir = os.path.join(tmp_dir,som_folder)
     cc_dir = os.path.join(tmp_dir,cc_folder)
 
 
-    # Copy SOM files from cloned Elk repo. Exclude binaries and restricted files.
+    # Copy files from cloned Elk repo. Exclude binaries and restricted files.
     src_dir_som = f'C:/dev/elk/{repo_name}/Distribution/'
     pattern = ['*_SCH.PDF','*.txt','*.zip','.git','images','*.step','*.x_t','*.DWG','*.md']
     shutil.copytree(src_dir_som, som_dir, ignore=shutil.ignore_patterns(*pattern))
 
-
-    # Copy CC files from cloned Elk repo. Exclude binaries and restricted files.
     src_dir_cc = f'C:/dev/elk/Carriers/distribution/{cc_repo_name}'
     pattern = ['PCB','RF Shield','.git*','*.md','*.step','*.x_t','*.DWG','*.DXF','*.scc','SEAF8*']
     shutil.copytree(src_dir_cc, cc_dir, ignore=shutil.ignore_patterns(*pattern))
@@ -240,7 +238,6 @@ def make_zip(src_folder,dest_folder):
     shutil.move(f'{output_file}.zip', f'{dest_path}')
 
     msg = f'ZIPPED: {dest_path}'
-    # print(msg)
     logger.info(msg)
 
 def cleanup(tmp_dir):
